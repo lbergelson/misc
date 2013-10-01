@@ -23,11 +23,77 @@
 * THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+import org.broadinstitute.sting.queue.function.RetryMemoryLimit
 import org.broadinstitute.sting.queue.QScript
+import org.broadinstitute.sting.queue.util.Logging
+import scala.io.Source
 
-class MakeStrelkaPON extends QScript {
+class MakeStrelkaPON extends QScript with Logging {
+
+    @Input(doc="the runStrelka.sh script")
+    var runStrelkaPath: File = _
+
+    @Input(doc="a file containing a list of normal samples")
+    var normals: File = _
+
+    @Input(doc="reference file")
+    var reference: File = _
+
+    @Input(doc="output directory")
+    var outputDir: File = _
+
+
     def script() {
 
+        val source = Source.fromFile(normals)
+        val lines = source.getLines().toList
+        val normalFiles = lines.map(new File(_))
+        val tumorFiles = Stream.continually(normalFiles).flatten.tail.take(normalFiles.length).toSeq
 
+        (normalFiles, tumorFiles).zipped.foreach{ (norm, tum) =>
+            val name = getName(norm,tum)
+            add( ToolInvocation(runStrelkaPath,norm,tum,reference, name) )
+        }
+
+    }
+
+    def getName(normal: File, tumor: File):String = {
+         new File(outputDir, s"${normal.getName}-${tumor.getName}}")
+    }
+
+    class ToolInvocation extends  CommandLineFunction with RetryMemoryLimit{
+        @Input(doc="The script to run")
+        var tool: File = _
+
+        @Input(doc="normal sample bam")
+        var normal: File = _
+
+        @Input(doc="tumor sample bam")
+        var tumor: File = _
+
+        @Input(doc="reference fasta")
+        var reference: File = _
+
+        @Output(doc="output directory")
+        var outputDir: File =_
+
+        def commandLine = required(tool)+
+            required(normal)+
+            required(tumor)+
+            required(reference)+
+            required(outputDir)
+    }
+
+    object ToolInvocation {
+        def apply(tool:File, normal:File, tumor:File, reference:File, outputDir:File) = {
+            val ti = new ToolInvocation
+            ti.tool = tool
+            ti.normal = normal
+            ti.tumor = tumor
+            ti.reference = reference
+            ti.outputDir = outputDir
+            ti.memoryLimit = 4
+            ti
+        }
     }
 }
