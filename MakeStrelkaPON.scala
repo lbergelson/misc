@@ -58,7 +58,7 @@ class MakeStrelkaPON extends QScript with Logging {
     }
 
     def getName(normal: File, tumor: File):String = {
-         new File(outputDir, s"${normal.getName}-${tumor.getName}}")
+         new File(outputDir, s"${normal.getName}-${tumor.getName}")
     }
 
     class ToolInvocation extends  CommandLineFunction with RetryMemoryLimit{
