@@ -32,14 +32,17 @@ class RunUGOnPON extends QScript with Logging{
                     logger.info("Can't find file: " + bam.getAbsolutePath)
                     None
                 }
-        }
+        }.toSeq
+        
     }
 
     def writeBamNames(bamfiles: Seq[File], outputFile: File){
         var writer: PrintWriter = null
         try{
             writer = new PrintWriter(new File(outputFile,"outputList.txt"))
+
             bamfiles.foreach(file => writer.println(file.getAbsolutePath+ "\t" + swapExt(outputdir, file.getAbsolutePath,"bam","ug.vcf" ).getAbsolutePath() ) )
+
         } catch {
             case e: IOException => throw new UserException.CouldNotCreateOutputFile(outputFile, "Could not write bams file.",e)
         } finally {
@@ -61,7 +64,7 @@ class RunUGOnPON extends QScript with Logging{
 
         val bamfiles = readBamNamesFromFile(listOfBams)
 
-        writeBamNames(bamfiles.toSeq, outputdir)
+        writeBamNames(bamfiles, outputdir)
         val genotypers = bamfiles.map( new GenotypeAtGivenSites(_, hotspots, outputdir))
         genotypers.foreach(add(_))
 
