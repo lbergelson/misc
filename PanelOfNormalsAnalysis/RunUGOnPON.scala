@@ -4,10 +4,11 @@ import org.broadinstitute.sting.commandline.Input
 import org.broadinstitute.sting.gatk.walkers.genotyper.GenotypeLikelihoodsCalculationModel
 import org.broadinstitute.sting.queue.extensions.gatk.UnifiedGenotyper
 import org.broadinstitute.sting.queue.QScript
+import org.broadinstitute.sting.queue.util.Logging
 import org.broadinstitute.sting.utils.exceptions.UserException
 import scala.io.Source
 
-class RunUGOnPON extends QScript{
+class RunUGOnPON extends QScript with Logging{
 
     @Input(doc="Text file with a list of bamfiles to run UG on")
     var listOfBams: File = "/home/unix/louisb/cga_home/PanelOfNormalsAnalysis/bamfiles.txt"
@@ -28,6 +29,7 @@ class RunUGOnPON extends QScript{
                 if (bam.exists()) {
                     Some(bam)
                 } else {
+                    logger.info("Can't find file: " + bam.getAbsolutePath)
                     None
                 }
         }
@@ -37,7 +39,7 @@ class RunUGOnPON extends QScript{
         var writer: PrintWriter = null
         try{
             writer = new PrintWriter(new File(outputFile,"outputList.txt"))
-            bamfiles.foreach(file => writer.println(file.getAbsolutePath+ " " + swapExt(outputdir, file.getAbsolutePath,"bam","ug.vcf" ).getAbsolutePath() ) )
+            bamfiles.foreach(file => writer.println(file.getAbsolutePath+ "\t" + swapExt(outputdir, file.getAbsolutePath,"bam","ug.vcf" ).getAbsolutePath() ) )
         } catch {
             case e: IOException => throw new UserException.CouldNotCreateOutputFile(outputFile, "Could not write bams file.",e)
         } finally {
