@@ -36,15 +36,13 @@ class RunUGOnPON extends QScript{
     def writeBamNames(bamfiles: Seq[File], outputFile: File){
         var writer: PrintWriter = null
         try{
-            writer = new PrintWriter(outputFile)
+            writer = new PrintWriter(new File(outputFile,"outputList.txt"))
             bamfiles.foreach(file => writer.println(file.getAbsolutePath+ " " + swapExt(outputdir, file.getAbsolutePath,"bam","ug.vcf" ).getAbsolutePath() ) )
         } catch {
             case e: IOException => throw new UserException.CouldNotCreateOutputFile(outputFile, "Could not write bams file.",e)
         } finally {
             IOUtils.closeQuietly(writer)
         }
-
-
     }
 
 
@@ -62,7 +60,6 @@ class RunUGOnPON extends QScript{
         val bamfiles = readBamNamesFromFile(listOfBams)
 
         writeBamNames(bamfiles.toSeq, outputdir)
-
         val genotypers = bamfiles.map( new GenotypeAtGivenSites(_, hotspots, outputdir))
         genotypers.foreach(add(_))
 
