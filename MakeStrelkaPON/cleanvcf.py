@@ -1,6 +1,8 @@
 import sys
 
 #remove lines that have a "." as part of one of the alt variants.
+#this is a valid structural variant definition, but not supported by gatk.
+#should not be present in strelka 1.0.11 or greater
 def cleanFile(file):
     if not file.endswith(".vcf"):
         print("{file} isn't a vcf".format(file=file))
